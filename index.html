@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vibe Coding Lecture Feedback</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        background-color: #ffffff;
+        color: #37352f;
+      }
+      .notion-bg-light { background-color: #f1f1ef; }
+      .notion-text-gray { color: #787774; }
+      .notion-border { border-color: #e9e9e8; }
+      .view { display: none; }
+      .view.active { display: block; animation: fadeIn 0.4s ease-out; }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Custom Slider Styling */
+      .notion-slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 6px;
+        background: #e9e9e8;
+        border-radius: 5px;
+        outline: none;
+        margin: 20px 0;
+      }
+      .notion-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        background: #37352f;
+        cursor: pointer;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: transform 0.1s ease;
+      }
+      .notion-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+      }
+      .notion-slider::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        background: #37352f;
+        cursor: pointer;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+    "firebase/analytics": "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+    "firebase/": "https://esm.sh/firebase@^12.8.0/"
+  }
+}
+</script>
+  </head>
+  <body class="bg-white selection:bg-gray-200">
+    <div id="app-container" class="max-w-2xl mx-auto px-6 py-12 md:py-24">
+      
+      <!-- View 1: Survey -->
+      <div id="view-survey" class="view active">
+        <div class="mb-12 flex items-center gap-4">
+          <div class="w-14 h-14 notion-bg-light rounded-xl flex items-center justify-center text-3xl shadow-sm">🚀</div>
+          <div>
+            <h1 class="text-4xl font-bold tracking-tight mb-1">바이브 코딩 강연 평가</h1>
+            <p class="notion-text-gray">대학생 여러분의 소중한 피드백을 기다립니다.</p>
+          </div>
+        </div>
+
+        <div class="mb-12">
+          <h2 class="text-sm font-semibold uppercase tracking-wider notion-text-gray mb-6 border-b notion-border pb-2">강의 만족도</h2>
+          
+          <div class="mb-12">
+            <div class="flex justify-between items-center mb-2">
+              <p class="font-medium text-lg">1. 강의 내용이 도움 되었나요?</p>
+              <span id="helpful-val-display" class="font-bold text-xl bg-[#f1f1ef] px-3 py-1 rounded-md">3</span>
+            </div>
+            <input type="range" id="helpful-slider" min="1" max="5" step="1" value="3" class="notion-slider">
+            <div class="flex justify-between text-xs notion-text-gray font-medium px-1">
+              <span>전혀 그렇지 않다</span>
+              <span>매우 그렇다</span>
+            </div>
+          </div>
+
+          <div class="mb-12">
+            <div class="flex justify-between items-center mb-2">
+              <p class="font-medium text-lg">2. 강의 내용이 잘 이해되었나요?</p>
+              <span id="understanding-val-display" class="font-bold text-xl bg-[#f1f1ef] px-3 py-1 rounded-md">3</span>
+            </div>
+            <input type="range" id="understanding-slider" min="1" max="5" step="1" value="3" class="notion-slider">
+            <div class="flex justify-between text-xs notion-text-gray font-medium px-1">
+              <span>전혀 그렇지 않다</span>
+              <span>매우 그렇다</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-12">
+          <h2 class="text-sm font-semibold uppercase tracking-wider notion-text-gray mb-6 border-b notion-border pb-2">추가 의견</h2>
+          <p class="mb-4 font-medium">강의에 대해 더 하고 싶은 말이 있다면 자유롭게 적어주세요.</p>
+          <textarea id="comments" placeholder="여기에 입력하세요..." class="w-full h-32 p-4 border notion-border rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 resize-none"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-8">
+          <button id="go-admin-btn" class="px-5 py-2.5 rounded-md font-medium border notion-border hover:bg-gray-50 transition-colors">관리자 모드</button>
+          <button id="submit-btn" class="px-5 py-2.5 rounded-md font-medium bg-[#37352f] text-white hover:bg-[#4a4842] transition-colors">제출하기</button>
+        </div>
+      </div>
+
+      <!-- View 2: Thank You -->
+      <div id="view-thanks" class="view">
+        <div class="text-center py-20">
+          <div class="text-7xl mb-8">✨</div>
+          <h1 class="text-4xl font-bold mb-4">감사합니다!</h1>
+          <p class="text-lg notion-text-gray mb-10">전달해주신 피드백은 더 나은 강의를 만드는 데 큰 도움이 됩니다.</p>
+          <div class="flex justify-center gap-4">
+            <button id="restart-btn" class="px-5 py-2.5 rounded-md font-medium bg-[#37352f] text-white hover:bg-[#4a4842] transition-colors">다시 작성하기</button>
+            <button id="thanks-admin-btn" class="px-5 py-2.5 rounded-md font-medium border notion-border hover:bg-gray-50 transition-colors">결과 확인하기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 3: Admin -->
+      <div id="view-admin" class="view">
+        <div class="flex justify-between items-end mb-12">
+          <div>
+            <h1 class="text-4xl font-bold mb-2">강의 평가 대시보드</h1>
+            <p id="response-count" class="notion-text-gray">총 0개의 응답이 수집되었습니다.</p>
+          </div>
+          <button id="back-survey-btn" class="px-4 py-2 rounded-md font-medium border notion-border hover:bg-gray-50 text-sm">설문 페이지로</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div class="border notion-border rounded-xl p-6 shadow-sm">
+            <p class="text-xs font-bold uppercase notion-text-gray mb-2">평균 도움 정도</p>
+            <p class="text-4xl font-bold"><span id="avg-helpful">0.0</span> <span class="text-xl font-normal notion-text-gray">/ 5.0</span></p>
+          </div>
+          <div class="border notion-border rounded-xl p-6 shadow-sm">
+            <p class="text-xs font-bold uppercase notion-text-gray mb-2">평균 이해도</p>
+            <p class="text-4xl font-bold"><span id="avg-understanding">0.0</span> <span class="text-xl font-normal notion-text-gray">/ 5.0</span></p>
+          </div>
+        </div>
+
+        <div class="mb-12">
+          <h2 class="text-sm font-semibold uppercase tracking-wider notion-text-gray mb-4 border-b notion-border pb-2">AI 인사이트 분석</h2>
+          <div class="bg-[#f7f6f3] p-6 rounded-xl border notion-border min-h-[120px] relative">
+            <div id="analysis-content" class="text-sm leading-relaxed whitespace-pre-wrap">
+              <div class="text-center py-6">
+                <p class="notion-text-gray mb-5">수집된 피드백을 AI로 요약하고 인사이트를 도출해 보세요.</p>
+                <button id="run-ai-btn" class="px-5 py-2.5 rounded-md font-medium bg-[#37352f] text-white hover:bg-[#4a4842] transition-colors disabled:opacity-50">
+                  Gemini AI 분석 시작
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="text-sm font-semibold uppercase tracking-wider notion-text-gray mb-4 border-b notion-border pb-2">개별 응답 목록</h2>
+          <div id="feedback-list" class="space-y-4">
+            <!-- Feedbacks will be injected here -->
+          </div>
+        </div>
+
+        <div class="mt-16 pt-8 border-t notion-border flex justify-center">
+          <button id="clear-data-btn" class="text-xs text-red-400 hover:text-red-600 transition-colors font-medium">모든 데이터 초기화</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="index.js"></script>
+  </body>
+</html>
